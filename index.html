@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Diabetes Risk Prediction</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ── Medical Navy Variables ───────────────────────────────── */
+:root {
+  --primary:       #0ea5e9;   /* sky blue */
+  --primary-light: #38bdf8;
+  --primary-pale:  #7dd3fc;
+  --primary-glow:  rgba(14,165,233,0.15);
+  --teal:          #14b8a6;
+  --teal-light:    #2dd4bf;
+  --danger:        #ef4444;
+  --danger-light:  #fca5a5;
+  --success:       #22c55e;
+  --success-light: #86efac;
+  --warning:       #f59e0b;
+  --dark:          #050d1a;   /* navbar */
+  --bg:            #070f1f;   /* page background */
+  --surface:       #0d1a2e;   /* cards */
+  --surface2:      #132038;   /* elevated */
+  --border:        rgba(14,165,233,0.15);
+  --text:          #e0f2fe;
+  --muted:         #7ea8c4;
+  --radius:        10px;
+  --shadow:        0 1px 3px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.35);
+  --nav-h:         64px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: Inter, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* ── Navbar ────────────────────────────────────────────────── */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 200;
+  background: var(--dark);
+  height: var(--nav-h);
+  display: flex;
+  align-items: center;
+  padding: 0 2rem;
+  gap: 1rem;
+  border-bottom: 1px solid rgba(14,165,233,0.2);
+}
+.nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.nav-icon { width: 36px; height: 36px; background: rgba(14,165,233,0.12); border-radius: 8px; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(14,165,233,0.25); }
+.nav-title { font-family: 'Fira Mono', monospace; font-weight: 700; font-size: 1.05rem; color: #fff; }
+.nav-title span { color: var(--primary-pale); }
+.nav-badge { margin-left: auto; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; background: rgba(14,165,233,0.12); color: var(--primary-pale); border: 1px solid rgba(14,165,233,0.25); border-radius: 20px; padding: 3px 10px; }
+
+/* ── Tabs ──────────────────────────────────────────────────── */
+.page-tabs {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.page-tabs::-webkit-scrollbar { display: none; }
+.tabs-inner { display: flex; max-width: 900px; margin: 0 auto; padding: 0 1.5rem; width: 100%; }
+.tab-btn {
+  background: none; border: none; cursor: pointer;
+  font-family: Inter, sans-serif; font-size: 0.83rem; font-weight: 600;
+  color: var(--muted); padding: 14px 20px;
+  border-bottom: 2px solid transparent; white-space: nowrap;
+  transition: color 0.2s, border-color 0.2s; display: flex; align-items: center; gap: 7px;
+}
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--primary-light); border-bottom-color: var(--primary); }
+.tab-icon { font-size: 1rem; }
+
+/* ── Layout ────────────────────────────────────────────────── */
+.page { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Page header ───────────────────────────────────────────── */
+.page-header { margin-bottom: 2rem; }
+.page-header h1 { font-size: 1.75rem; font-weight: 800; color: var(--text); margin-bottom: 0.3rem; }
+.page-header p { color: var(--muted); font-size: 0.92rem; }
+
+/* ── Form card ─────────────────────────────────────────────── */
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin-bottom: 1.25rem;
+}
+.form-section-header {
+  display: flex; align-items: center; gap: 10px;
+  padding: 1rem 1.5rem;
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+}
+.form-section-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.form-section-title { font-size: 0.88rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); }
+.form-body { padding: 1.5rem; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; }
+.form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+.form-row.one { grid-template-columns: 1fr; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-label {
+  font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--muted);
+}
+.form-hint { font-size: 0.72rem; color: rgba(126,168,196,0.6); margin-top: 2px; }
+.form-control {
+  font-family: Inter, sans-serif; font-size: 0.9rem;
+  background: var(--surface2); color: var(--text);
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 9px 12px; outline: none; width: 100%;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  -webkit-appearance: none; appearance: none;
+}
+.form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(14,165,233,0.12); }
+select.form-control { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237ea8c4' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; cursor: pointer; }
+
+/* ── Validation warning ────────────────────────────────────── */
+.val-warning {
+  display: none; font-size: 0.78rem; font-weight: 500;
+  color: #fcd34d; margin-top: 4px;
+}
+.val-warning.visible { display: block; }
+
+/* ── Buttons ───────────────────────────────────────────────── */
+.btn-row { display: flex; gap: 12px; align-items: center; margin-top: 1.5rem; flex-wrap: wrap; }
+.btn-predict {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: linear-gradient(90deg, var(--primary), var(--teal));
+  color: #fff; font-family: Inter, sans-serif; font-weight: 700; font-size: 0.95rem;
+  padding: 12px 28px; border-radius: 8px; border: none; cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.btn-predict:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-predict:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-reset {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: transparent; color: var(--muted);
+  font-family: Inter, sans-serif; font-weight: 600; font-size: 0.88rem;
+  padding: 12px 20px; border-radius: 8px;
+  border: 1px solid rgba(126,168,196,0.25); cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.btn-reset:hover { color: var(--text); border-color: var(--border); }
+
+/* ── Loading dots ──────────────────────────────────────────── */
+.loading-dots { display: none; align-items: center; gap: 5px; margin-left: 4px; }
+.loading-dots.active { display: flex; }
+.ldot { width: 7px; height: 7px; border-radius: 50%; background: var(--primary-pale); animation: ldotPulse 1.2s infinite both; }
+.ldot:nth-child(2) { animation-delay: 0.15s; background: var(--teal-light); }
+.ldot:nth-child(3) { animation-delay: 0.3s; background: var(--primary-pale); }
+@keyframes ldotPulse { 0%,80%,100%{ transform:scale(0.6);opacity:0.4; } 40%{ transform:scale(1.1);opacity:1; } }
+
+/* ── Result card ───────────────────────────────────────────── */
+.result-card {
+  display: none;
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  margin-top: 1.5rem;
+}
+.result-card.visible { display: block; }
+.result-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.result-header h2 { font-size: 1rem; font-weight: 700; color: var(--text); }
+.risk-badge {
+  font-size: 0.8rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.8px; padding: 5px 14px; border-radius: 20px;
+}
+.risk-badge.high { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+.risk-badge.low  { background: rgba(34,197,94,0.15);  color: #86efac; border: 1px solid rgba(34,197,94,0.3); }
+.result-body { padding: 1.5rem; }
+.result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+
+/* ── Gauge ─────────────────────────────────────────────────── */
+.gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+.gauge-svg { width: 100%; max-width: 260px; }
+.gauge-label { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+
+/* ── Probability bar ───────────────────────────────────────── */
+.prob-section { display: flex; flex-direction: column; justify-content: center; gap: 1rem; }
+.prob-num { font-size: 2.8rem; font-weight: 800; line-height: 1; }
+.prob-sub { font-size: 0.8rem; color: var(--muted); }
+.prob-bar-bg { height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; margin-top: 0.5rem; }
+.prob-bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+
+/* ── Info banner ───────────────────────────────────────────── */
+.info-banner {
+  padding: 12px 16px; border-radius: 8px;
+  font-size: 0.85rem; font-weight: 500; line-height: 1.6; margin-top: 1.25rem;
+}
+.banner-blue   { background: rgba(14,165,233,0.1);   color: var(--primary-pale); border: 1px solid rgba(14,165,233,0.25); }
+.banner-danger { background: rgba(239,68,68,0.1);    color: #fca5a5;             border: 1px solid rgba(239,68,68,0.25); }
+.banner-success{ background: rgba(34,197,94,0.1);    color: #86efac;             border: 1px solid rgba(34,197,94,0.25); }
+.banner-warn   { background: rgba(245,158,11,0.1);   color: #fcd34d;             border: 1px solid rgba(245,158,11,0.25); }
+
+/* ── Download btn ──────────────────────────────────────────── */
+.btn-download {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: transparent; color: var(--teal-light);
+  border: 1.5px solid var(--teal); border-radius: 7px;
+  font-family: Inter, sans-serif; font-weight: 700; font-size: 0.85rem;
+  padding: 9px 18px; cursor: pointer; margin-top: 1.25rem;
+  transition: background 0.2s, color 0.2s;
+}
+.btn-download:hover { background: var(--teal); color: #fff; }
+
+/* ── Input summary ─────────────────────────────────────────── */
+.input-summary-wrap { margin-top: 1.25rem; }
+.summary-toggle {
+  background: none; border: none; cursor: pointer;
+  font-family: Inter, sans-serif; font-size: 0.82rem; font-weight: 600;
+  color: var(--muted); display: flex; align-items: center; gap: 6px;
+  padding: 4px 0; transition: color 0.2s;
+}
+.summary-toggle:hover { color: var(--text); }
+.summary-table-wrap { display: none; margin-top: 0.75rem; overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+.summary-table-wrap.open { display: block; }
+table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+thead th { background: var(--surface2); padding: 8px 14px; text-align: left; font-weight: 700; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); border-bottom: 1px solid var(--border); }
+tbody td { padding: 8px 14px; border-bottom: 1px solid rgba(14,165,233,0.07); color: var(--text); }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover { background: rgba(14,165,233,0.04); }
+
+/* ── Static content (model info / about) ───────────────────── */
+.content-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 1.75rem; margin-bottom: 1.25rem;
+}
+.content-card h2 { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 0.75rem; display: flex; align-items: center; gap: 8px; }
+.content-card h2 .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.content-card p, .content-card li { color: var(--muted); font-size: 0.9rem; line-height: 1.75; margin-bottom: 0.4rem; }
+.content-card ul { padding-left: 1.25rem; }
+.content-card strong { color: var(--text); }
+.metric-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)); gap: 12px; margin-top: 1rem; }
+.metric-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; text-align: center; }
+.metric-num { font-size: 1.6rem; font-weight: 800; color: var(--primary-light); line-height: 1; margin-bottom: 4px; }
+.metric-lbl { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--muted); }
+
+/* ── Footer ────────────────────────────────────────────────── */
+footer { text-align: center; padding: 2rem; font-size: 0.76rem; color: var(--muted); }
+
+/* ── Responsive ────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .navbar { padding: 0 1rem; }
+  .nav-badge { display: none; }
+  .page { padding: 1.25rem 1rem 3rem; }
+  .form-row, .form-row.three { grid-template-columns: 1fr; }
+  .result-grid { grid-template-columns: 1fr; }
+  .gauge-svg { max-width: 200px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ── Navbar ── -->
+<nav class="navbar">
+  <a href="/" class="nav-logo">
+    <div class="nav-icon">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="1.8">
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+      </svg>
+    </div>
+    <div class="nav-title">Diabetes <span>Risk AI</span></div>
+  </a>
+  <span class="nav-badge">ML Powered</span>
+</nav>
+
+<!-- ── Tabs ── -->
+<div class="page-tabs">
+  <div class="tabs-inner">
+    <button class="tab-btn active" onclick="switchTab('prediction', this)">
+      <span class="tab-icon">🩺</span> Prediction
+    </button>
+    <button class="tab-btn" onclick="switchTab('model', this)">
+      <span class="tab-icon">📊</span> Model Info
+    </button>
+    <button class="tab-btn" onclick="switchTab('about', this)">
+      <span class="tab-icon">ℹ️</span> About
+    </button>
+  </div>
+</div>
+
+<!-- ── Page ── -->
+<main class="page">
+
+  <!-- Prediction Tab -->
+  <div class="tab-panel active" id="tab-prediction">
+    <div class="page-header">
+      <h1>Diabetes Risk Prediction</h1>
+      <p>Enter patient information to estimate diabetes likelihood using a trained machine learning model.</p>
+    </div>
+
+    <!-- Demographics -->
+    <div class="form-card">
+      <div class="form-section-header">
+        <div class="form-section-dot" style="background:var(--primary)"></div>
+        <div class="form-section-title">Demographics</div>
+      </div>
+      <div class="form-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Gender</label>
+            <select class="form-control" id="gender">
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Age</label>
+            <input type="number" class="form-control" id="age" min="0" max="120" step="1" value="40" placeholder="e.g. 45">
+            <span class="form-hint">Years (0 – 120)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Medical History -->
+    <div class="form-card">
+      <div class="form-section-header">
+        <div class="form-section-dot" style="background:var(--teal)"></div>
+        <div class="form-section-title">Medical History</div>
+      </div>
+      <div class="form-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Hypertension</label>
+            <select class="form-control" id="hypertension">
+              <option value="0">No</option>
+              <option value="1">Yes</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Heart Disease</label>
+            <select class="form-control" id="heart_disease">
+              <option value="0">No</option>
+              <option value="1">Yes</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lab Values & Lifestyle -->
+    <div class="form-card">
+      <div class="form-section-header">
+        <div class="form-section-dot" style="background:var(--primary-light)"></div>
+        <div class="form-section-title">Lab Values &amp; Lifestyle</div>
+      </div>
+      <div class="form-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Smoking History</label>
+            <select class="form-control" id="smoking_history">
+              <option value="never">Never</option>
+              <option value="current">Current</option>
+              <option value="former">Former</option>
+              <option value="No Info">No Info</option>
+              <option value="ever">Ever</option>
+              <option value="not current">Not Current</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">BMI</label>
+            <input type="number" class="form-control" id="bmi" min="10" max="100" step="0.1" value="25.0" placeholder="e.g. 24.5">
+            <span class="form-hint">Body Mass Index (10 – 100)</span>
+            <span class="val-warning" id="bmi-warn">⚠ BMI appears outside typical range.</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">HbA1c Level</label>
+            <input type="number" class="form-control" id="HbA1c_level" min="3" max="15" step="0.1" value="5.5" placeholder="e.g. 5.8">
+            <span class="form-hint">Glycated haemoglobin % (3 – 15)</span>
+            <span class="val-warning" id="hba1c-warn">⚠ HbA1c appears outside clinical range.</span>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Blood Glucose Level</label>
+            <input type="number" class="form-control" id="blood_glucose_level" min="50" max="400" step="1" value="100" placeholder="e.g. 140">
+            <span class="form-hint">mg/dL (50 – 400)</span>
+            <span class="val-warning" id="glucose-warn">⚠ Blood glucose appears unusual.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="btn-row">
+      <button class="btn-predict" id="predict-btn" onclick="runPrediction()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Predict Risk
+        <div class="loading-dots" id="loading-dots"><div class="ldot"></div><div class="ldot"></div><div class="ldot"></div></div>
+      </button>
+      <button class="btn-reset" onclick="resetForm()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Reset
+      </button>
+    </div>
+
+    <!-- Result card -->
+    <div class="result-card" id="result-card">
+      <div class="result-header">
+        <h2>Prediction Result</h2>
+        <span class="risk-badge" id="risk-badge">—</span>
+      </div>
+      <div class="result-body">
+        <div class="result-grid">
+          <!-- Gauge -->
+          <div class="gauge-wrap">
+            <svg class="gauge-svg" viewBox="0 0 220 130" xmlns="http://www.w3.org/2000/svg">
+              <!-- Track -->
+              <path d="M20 120 A90 90 0 0 1 200 120" fill="none" stroke="#132038" stroke-width="18" stroke-linecap="round"/>
+              <!-- Green zone -->
+              <path d="M20 120 A90 90 0 0 1 110 30" fill="none" stroke="#166534" stroke-width="18" stroke-linecap="round" opacity="0.5"/>
+              <!-- Yellow zone -->
+              <path d="M110 30 A90 90 0 0 1 171 57" fill="none" stroke="#854d0e" stroke-width="18" stroke-linecap="round" opacity="0.5"/>
+              <!-- Red zone -->
+              <path d="M171 57 A90 90 0 0 1 200 120" fill="none" stroke="#7f1d1d" stroke-width="18" stroke-linecap="round" opacity="0.5"/>
+              <!-- Needle fill arc (dynamic) -->
+              <path id="gauge-fill" d="M20 120 A90 90 0 0 1 20 120" fill="none" stroke="#0ea5e9" stroke-width="18" stroke-linecap="round"/>
+              <!-- Center text -->
+              <text id="gauge-pct" x="110" y="100" text-anchor="middle" font-size="26" font-weight="800" fill="#e0f2fe" font-family="Inter,sans-serif">0%</text>
+              <text x="110" y="118" text-anchor="middle" font-size="10" fill="#7ea8c4" font-family="Inter,sans-serif">Diabetes Risk</text>
+              <!-- Labels -->
+              <text x="16" y="130" text-anchor="middle" font-size="9" fill="#22c55e" font-family="Inter,sans-serif">Low</text>
+              <text x="204" y="130" text-anchor="middle" font-size="9" fill="#ef4444" font-family="Inter,sans-serif">High</text>
+            </svg>
+            <div class="gauge-label">Risk Probability Gauge</div>
+          </div>
+
+          <!-- Probability numbers -->
+          <div class="prob-section">
+            <div>
+              <div class="prob-num" id="prob-num" style="color:var(--primary-light)">—</div>
+              <div class="prob-sub">Predicted probability of diabetes</div>
+              <div class="prob-bar-bg">
+                <div class="prob-bar-fill" id="prob-bar" style="width:0%;background:var(--primary)"></div>
+              </div>
+            </div>
+            <div id="risk-message" class="info-banner banner-blue" style="display:none"></div>
+          </div>
+        </div>
+
+        <!-- Explanation -->
+        <div class="info-banner banner-blue" style="margin-top:1.25rem">
+          <strong>What this means:</strong> This prediction is based on patterns learned from historical data — including blood glucose, HbA1c, BMI, age, and medical history. Higher glucose and HbA1c levels generally increase predicted risk, while normal BMI and no hypertension or heart disease tend to reduce it.<br><br>
+          <strong>This tool is for informational purposes only</strong> and is not a substitute for professional medical advice, diagnosis, or treatment.
+        </div>
+
+        <!-- Input summary -->
+        <div class="input-summary-wrap">
+          <button class="summary-toggle" onclick="toggleSummary()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+            <span id="summary-toggle-text">View input data used for prediction</span>
+          </button>
+          <div class="summary-table-wrap" id="summary-table-wrap">
+            <table id="summary-table">
+              <thead><tr id="summary-head"></tr></thead>
+              <tbody><tr id="summary-row"></tr></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Download -->
+        <button class="btn-download" id="download-btn" onclick="downloadReport()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download Prediction Report (CSV)
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Model Info Tab -->
+  <div class="tab-panel" id="tab-model">
+    <div class="page-header">
+      <h1>Model Information</h1>
+      <p>Technical details about the machine learning model used for prediction.</p>
+    </div>
+
+    <div class="metric-row">
+      <div class="metric-card"><div class="metric-num">~91%</div><div class="metric-lbl">Accuracy</div></div>
+      <div class="metric-card"><div class="metric-num">~0.96</div><div class="metric-lbl">ROC AUC</div></div>
+      <div class="metric-card"><div class="metric-num">100k</div><div class="metric-lbl">Training Rows</div></div>
+      <div class="metric-card"><div class="metric-num">8</div><div class="metric-lbl">Features</div></div>
+    </div>
+
+    <div class="content-card" style="margin-top:1.25rem">
+      <h2><div class="dot" style="background:var(--primary)"></div> Model Overview</h2>
+      <p>The model is a scikit-learn <strong>Pipeline</strong> combining preprocessing and a <strong>Logistic Regression</strong> classifier. It was trained on a diabetes prediction dataset containing 100,000 patient records with 8 clinical and demographic features.</p>
+      <ul>
+        <li>Algorithm: Logistic Regression (max_iter=1000)</li>
+        <li>Class imbalance handled with <strong>balanced class weights</strong></li>
+        <li>Train / test split: 80% / 20%, random_state=42</li>
+        <li>Model auto-trains on first startup from the public dataset</li>
+      </ul>
+    </div>
+
+    <div class="content-card">
+      <h2><div class="dot" style="background:var(--teal)"></div> Preprocessing Pipeline</h2>
+      <ul>
+        <li><strong>Categorical features</strong> (gender, smoking_history) → One-Hot Encoding</li>
+        <li><strong>Numeric features</strong> (age, BMI, HbA1c, blood glucose, hypertension, heart disease) → Standard Scaling</li>
+        <li>ColumnTransformer ensures both transformations run in parallel</li>
+        <li>Same transformations applied at training and inference time</li>
+      </ul>
+    </div>
+
+    <div class="content-card">
+      <h2><div class="dot" style="background:var(--primary-light)"></div> Input Features</h2>
+      <div style="overflow-x:auto;border-radius:8px;border:1px solid var(--border);margin-top:0.5rem">
+        <table>
+          <thead><tr><th>Feature</th><th>Type</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td>gender</td><td>Categorical</td><td>Male / Female / Other</td></tr>
+            <tr><td>age</td><td>Numeric</td><td>Patient age in years</td></tr>
+            <tr><td>hypertension</td><td>Binary</td><td>0 = No, 1 = Yes</td></tr>
+            <tr><td>heart_disease</td><td>Binary</td><td>0 = No, 1 = Yes</td></tr>
+            <tr><td>smoking_history</td><td>Categorical</td><td>never / current / former / ever / not current / No Info</td></tr>
+            <tr><td>bmi</td><td>Numeric</td><td>Body Mass Index</td></tr>
+            <tr><td>HbA1c_level</td><td>Numeric</td><td>Glycated haemoglobin (%)</td></tr>
+            <tr><td>blood_glucose_level</td><td>Numeric</td><td>Blood glucose (mg/dL)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="content-card">
+      <h2><div class="dot" style="background:var(--warning)"></div> Intended Use</h2>
+      <p>This model is intended for <strong>educational and exploratory purposes</strong>. It demonstrates how machine learning can be applied to healthcare-related risk prediction tasks. It should <strong>not</strong> be used as the sole basis for any clinical decision.</p>
+    </div>
+  </div>
+
+  <!-- About Tab -->
+  <div class="tab-panel" id="tab-about">
+    <div class="page-header">
+      <h1>About This App</h1>
+      <p>A full-stack machine learning application built for demonstration purposes.</p>
+    </div>
+
+    <div class="content-card">
+      <h2><div class="dot" style="background:var(--primary)"></div> Application Overview</h2>
+      <p>This application demonstrates a complete machine learning workflow — data preprocessing, model training, model persistence, and a professional web interface for real-time risk predictions. The backend is built with <strong>Flask</strong> and the ML pipeline uses <strong>scikit-learn</strong>.</p>
+    </div>
+
+    <div class="content-card">
+      <h2><div class="dot" style="background:var(--teal)"></div> Technology Stack</h2>
+      <ul>
+        <li><strong>Backend:</strong> Python, Flask, Gunicorn</li>
+        <li><strong>ML:</strong> scikit-learn (Logistic Regression, Pipeline, ColumnTransformer)</li>
+        <li><strong>Data:</strong> Pandas, NumPy</li>
+        <li><strong>Frontend:</strong> HTML, CSS, Vanilla JavaScript</li>
+        <li><strong>Deployment:</strong> Render</li>
+      </ul>
+    </div>
+
+    <div class="content-card">
+      <h2><div class="dot" style="background:var(--danger)"></div> Medical Disclaimer</h2>
+      <div class="info-banner banner-danger" style="margin:0">
+        This app is for <strong>demonstration and educational purposes only</strong>. It is not a medical device and must not be used to make real-world healthcare decisions. Always consult a qualified healthcare professional for medical advice.
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:2rem;font-size:0.76rem;color:var(--muted)">
+      © 2026 — Diabetes Risk Prediction Demo
+    </div>
+  </div>
+
+</main>
+
+<footer>Diabetes Risk AI &nbsp;·&nbsp; Powered by Flask + scikit-learn &nbsp;·&nbsp; <a href="/" style="color:var(--primary-pale)">New Prediction</a></footer>
+
+<script>
+const state = { lastInput: null };
+
+/* ── Tab switching ─────────────────────────────────────────── */
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+/* ── Validation ────────────────────────────────────────────── */
+function validateInputs() {
+  const bmi   = parseFloat(document.getElementById('bmi').value);
+  const hba1c = parseFloat(document.getElementById('HbA1c_level').value);
+  const gluc  = parseInt(document.getElementById('blood_glucose_level').value);
+  toggle('bmi-warn',     bmi < 12 || bmi > 80);
+  toggle('hba1c-warn',   hba1c < 3 || hba1c > 14);
+  toggle('glucose-warn', gluc < 50 || gluc > 350);
+}
+['bmi','HbA1c_level','blood_glucose_level'].forEach(id =>
+  document.getElementById(id).addEventListener('input', validateInputs)
+);
+function toggle(id, show) {
+  document.getElementById(id).classList.toggle('visible', show);
+}
+
+/* ── Collect form data ─────────────────────────────────────── */
+function collectFormData() {
+  return {
+    gender:              document.getElementById('gender').value,
+    age:                 document.getElementById('age').value,
+    hypertension:        document.getElementById('hypertension').value,
+    heart_disease:       document.getElementById('heart_disease').value,
+    smoking_history:     document.getElementById('smoking_history').value,
+    bmi:                 document.getElementById('bmi').value,
+    HbA1c_level:         document.getElementById('HbA1c_level').value,
+    blood_glucose_level: document.getElementById('blood_glucose_level').value,
+  };
+}
+
+/* ── Run prediction ────────────────────────────────────────── */
+function runPrediction() {
+  const btn  = document.getElementById('predict-btn');
+  const dots = document.getElementById('loading-dots');
+  btn.disabled = true;
+  dots.classList.add('active');
+
+  const data = collectFormData();
+  state.lastInput = data;
+
+  fetch('/api/predict', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  .then(r => r.json())
+  .then(res => {
+    btn.disabled = false;
+    dots.classList.remove('active');
+    if (res.error) { alert('Error: ' + res.error); return; }
+    renderResult(res);
+  })
+  .catch(err => {
+    btn.disabled = false;
+    dots.classList.remove('active');
+    alert('Request failed: ' + err);
+  });
+}
+
+/* ── Render result ─────────────────────────────────────────── */
+function renderResult(res) {
+  const pct      = Math.round(res.probability * 100);
+  const isHigh   = res.prediction === 1;
+  const color    = isHigh ? '#ef4444' : '#22c55e';
+
+  // Badge
+  const badge = document.getElementById('risk-badge');
+  badge.textContent = res.risk_label;
+  badge.className   = 'risk-badge ' + (isHigh ? 'high' : 'low');
+
+  // Gauge arc
+  setGauge(res.probability, color);
+
+  // Probability number + bar
+  document.getElementById('prob-num').textContent  = pct + '%';
+  document.getElementById('prob-num').style.color  = color;
+  document.getElementById('prob-bar').style.width  = pct + '%';
+  document.getElementById('prob-bar').style.background = color;
+
+  // Risk message
+  const msg = document.getElementById('risk-message');
+  msg.style.display = 'block';
+  if (isHigh) {
+    msg.className = 'info-banner banner-danger';
+    msg.innerHTML = '🚨 <strong>High Risk Detected.</strong> This patient shows elevated probability of diabetes based on the provided clinical values.';
+  } else {
+    msg.className = 'info-banner banner-success';
+    msg.innerHTML = '✅ <strong>Low Risk Detected.</strong> The provided clinical values suggest a lower likelihood of diabetes at this time.';
+  }
+
+  // Input summary table
+  buildSummaryTable(state.lastInput);
+
+  // Show card
+  document.getElementById('result-card').classList.add('visible');
+  setTimeout(() => document.getElementById('result-card').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 100);
+}
+
+/* ── SVG gauge arc ─────────────────────────────────────────── */
+function setGauge(prob, color) {
+  const cx = 110, cy = 120, r = 90;
+  const startAngle = Math.PI;
+  const endAngle   = startAngle + prob * Math.PI;
+  const x1 = cx + r * Math.cos(startAngle);
+  const y1 = cy + r * Math.sin(startAngle);
+  const x2 = cx + r * Math.cos(endAngle);
+  const y2 = cy + r * Math.sin(endAngle);
+  const large = prob > 0.5 ? 1 : 0;
+  const d = `M${x1} ${y1} A${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
+  const fill = document.getElementById('gauge-fill');
+  fill.setAttribute('d', d);
+  fill.setAttribute('stroke', color);
+  document.getElementById('gauge-pct').textContent = Math.round(prob * 100) + '%';
+  document.getElementById('gauge-pct').setAttribute('fill', color);
+}
+
+/* ── Input summary table ───────────────────────────────────── */
+function buildSummaryTable(data) {
+  const labels = {
+    gender: 'Gender', age: 'Age', hypertension: 'Hypertension',
+    heart_disease: 'Heart Disease', smoking_history: 'Smoking History',
+    bmi: 'BMI', HbA1c_level: 'HbA1c Level', blood_glucose_level: 'Blood Glucose',
+  };
+  const head = document.getElementById('summary-head');
+  const row  = document.getElementById('summary-row');
+  head.innerHTML = Object.values(labels).map(l => `<th>${l}</th>`).join('');
+  row.innerHTML  = Object.keys(labels).map(k => {
+    let v = data[k];
+    if (k === 'hypertension' || k === 'heart_disease') v = v == '1' ? 'Yes' : 'No';
+    return `<td>${v}</td>`;
+  }).join('');
+}
+
+function toggleSummary() {
+  const wrap = document.getElementById('summary-table-wrap');
+  const open = wrap.classList.toggle('open');
+  document.getElementById('summary-toggle-text').textContent =
+    open ? 'Hide input data' : 'View input data used for prediction';
+}
+
+/* ── Download report ───────────────────────────────────────── */
+function downloadReport() {
+  if (!state.lastInput) return;
+  fetch('/api/report', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(state.lastInput),
+  })
+  .then(r => r.blob())
+  .then(blob => {
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement('a');
+    a.href = url; a.download = 'diabetes_prediction_report.csv';
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a); URL.revokeObjectURL(url);
+  })
+  .catch(err => alert('Download failed: ' + err));
+}
+
+/* ── Reset form ────────────────────────────────────────────── */
+function resetForm() {
+  document.getElementById('gender').value              = 'Male';
+  document.getElementById('age').value                 = '40';
+  document.getElementById('hypertension').value        = '0';
+  document.getElementById('heart_disease').value       = '0';
+  document.getElementById('smoking_history').value     = 'never';
+  document.getElementById('bmi').value                 = '25.0';
+  document.getElementById('HbA1c_level').value         = '5.5';
+  document.getElementById('blood_glucose_level').value = '100';
+  ['bmi-warn','hba1c-warn','glucose-warn'].forEach(id =>
+    document.getElementById(id).classList.remove('visible')
+  );
+  document.getElementById('result-card').classList.remove('visible');
+  state.lastInput = null;
+}
+</script>
+</body>
+</html>
